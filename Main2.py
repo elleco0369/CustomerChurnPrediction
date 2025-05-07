@@ -173,25 +173,71 @@ evaluate("RandomForest + RFE", y_test, rf_rfe.predict(X_test_rfe))
 evaluate("XGBoost     + RFE", y_test, xgb_rfe.predict(X_test_rfe))
 
 
-# Optional: visualize correlation
+# Feature Correlation Matrix
 plt.figure(figsize=(18, 12))
 corr = dfss.apply(lambda x: pd.factorize(x)[0]).corr()
 mask = np.triu(np.ones_like(corr, dtype=bool))
-
-sns.heatmap(
-    corr,
-    mask=mask,
-    annot=True,
-    fmt=".2f",
-    annot_kws={"size": 9,},
-    linewidths=0.5,
-    cmap="coolwarm",
-    vmin=-1, vmax=1,
-    cbar_kws={"shrink": .5}
-)
-
+sns.heatmap(corr,mask=mask,annot=True,fmt=".2f",annot_kws={"size": 9,},linewidths=0.5,cmap="coolwarm",vmin=-1, vmax=1,cbar_kws={"shrink": .5})
 plt.xticks(rotation=45, ha="right")     # tilt labels so they don’t overlap
 plt.yticks(rotation=0)
 plt.title("Feature Correlation Matrix", pad=16, fontsize=14)
+plt.tight_layout()
+plt.show()
+
+yes_total = (df['Churn Label']=="Yes").sum()
+no_total  = (df['Churn Label']=="No").sum()
+yes_f = ((df['Gender']=="Female") & (df['Churn Label']=="Yes")).sum()
+yes_m = ((df['Gender']=="Male")   & (df['Churn Label']=="Yes")).sum()
+no_f  = ((df['Gender']=="Female") & (df['Churn Label']=="No")).sum()
+no_m  = ((df['Gender']=="Male")   & (df['Churn Label']=="No")).sum()
+
+outer_vals   = [yes_total, no_total]
+outer_labels = ["Churn: Yes", "Churn: No"]
+outer_colors = ['#ff6666', '#66b3ff']
+
+inner_vals   = [yes_f, yes_m, no_f, no_m]
+inner_labels = ["Yes - F", "Yes - M", "No - F", "No - M"]
+inner_colors = ['#c2c2f0','#ffb3e6','#c2c2f0','#ffb3e6']
+
+fig, ax = plt.subplots(figsize=(8, 8))
+size = 0.3
+# Outer
+ax.pie(outer_vals,radius=1,labels=outer_labels,colors=outer_colors,wedgeprops=dict(width=size, edgecolor='white'),autopct='%1.1f%%',pctdistance=0.8,labeldistance=1.15,textprops=dict(fontsize=12))
+#Inner
+ax.pie(inner_vals,radius=1-size,labels=inner_labels,colors=inner_colors,wedgeprops=dict(width=size, edgecolor='white'),autopct='%1.1f%%',pctdistance=0.35,labeldistance=0.65,textprops=dict(fontsize=10, fontweight='bold'))
+ax.set(aspect="equal")
+plt.title('Churn Distribution by Gender', y=1.05)
+plt.tight_layout()
+plt.show()
+
+
+# Customer contract distribution
+plt.figure(figsize=(10, 6))
+sns.countplot(data=df,x="Churn Label",hue="Contract",palette="Set2")
+plt.title("Customer contract distribution", fontsize=16)
+plt.xlabel("Churn")
+plt.ylabel("Count")
+plt.legend(title="Contract", fontsize=12, title_fontsize=12)
+plt.tight_layout()
+plt.show()
+
+#Dependents Distribution by Churn
+color_map = {"Yes": "#FF97FF", "No": "#AB63FA"}
+plt.figure(figsize=(10, 6))
+sns.countplot(data=df,x="Churn Label",hue="Dependents",palette=color_map)
+plt.title("Dependents Distribution by Churn")
+plt.xlabel("Churn")
+plt.ylabel("Count")
+plt.legend(title="Dependents")
+plt.tight_layout()
+plt.show()
+
+# Monthly Charges Distribution by Churn
+fig, ax = plt.subplots(figsize=(10, 6))
+sns.kdeplot(df["Monthly Charges"][df["Churn Label"] == 'No'],fill=True,alpha=0.5,label="No churn",ax=ax)
+sns.kdeplot(df["Monthly Charges"][df["Churn Label"] == 'Yes'],fill=True,alpha=0.5,label="Churned",ax=ax)
+ax.set_title("Monthly Charges Distribution by Churn")
+ax.set_xlabel("Monthly Charges")
+ax.legend()
 plt.tight_layout()
 plt.show()

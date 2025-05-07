@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from pandas.plotting import table
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -60,62 +61,56 @@ print(dfss.info())
 print(dfss.isnull().sum())
 print(dfss.head(3))
 
-##Egitim 
+yes_total = (df['Churn Label']=="Yes").sum()
+no_total  = (df['Churn Label']=="No").sum()
+yes_f = ((df['Gender']=="Female") & (df['Churn Label']=="Yes")).sum()
+yes_m = ((df['Gender']=="Male")   & (df['Churn Label']=="Yes")).sum()
+no_f  = ((df['Gender']=="Female") & (df['Churn Label']=="No")).sum()
+no_m  = ((df['Gender']=="Male")   & (df['Churn Label']=="No")).sum()
 
-X = dfss.drop(columns=['churn_value'], axis=1)
-y = dfss['churn_value']
+outer_vals   = [yes_total, no_total]
+outer_labels = ["Churn: Yes", "Churn: No"]
+outer_colors = ['#ff6666', '#66b3ff']
 
-X = pd.get_dummies(X, drop_first=True)
+inner_vals   = [yes_f, yes_m, no_f, no_m]
+inner_labels = ["Yes - F", "Yes - M", "No - F", "No - M"]
+inner_colors = ['#c2c2f0','#ffb3e6','#c2c2f0','#ffb3e6']
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y,
-    test_size=0.2,
-    random_state=42,
-    stratify=y
-)
+fig, ax = plt.subplots(figsize=(8, 8))
+size = 0.3
+# Outer
+ax.pie(outer_vals,radius=1,labels=outer_labels,colors=outer_colors,wedgeprops=dict(width=size, edgecolor='white'),autopct='%1.1f%%',pctdistance=0.8,labeldistance=1.15,textprops=dict(fontsize=12))
+#Inner
+ax.pie(inner_vals,radius=1-size,labels=inner_labels,colors=inner_colors,wedgeprops=dict(width=size, edgecolor='white'),autopct='%1.1f%%',pctdistance=0.35,labeldistance=0.65,textprops=dict(fontsize=10, fontweight='bold'))
+ax.set(aspect="equal")
+plt.title('Churn Distribution by Gender', y=1.05)
+plt.tight_layout()
+plt.show()
 
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled  = scaler.transform(X_test)
+plt.figure(figsize=(10, 6))
+sns.countplot(data=df,x="Churn Label",hue="Contract",palette="Set2")
+plt.title("Customer contract distribution", fontsize=16)
+plt.xlabel("Churn")
+plt.ylabel("Count")
+plt.legend(title="Contract", fontsize=12, title_fontsize=12)
+plt.tight_layout()
+plt.show() 
 
-rf  = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
-rf.fit(X_train_scaled, y_train)
+color_map = {"Yes": "#FF97FF", "No": "#AB63FA"}
+plt.figure(figsize=(10, 6))
+sns.countplot(data=df,x="Churn Label",hue="Dependents",palette=color_map)
+plt.title("Dependents Distribution by Churn")
+plt.xlabel("Churn")
+plt.ylabel("Count")
+plt.legend(title="Dependents")
+plt.tight_layout()
+plt.show()
 
-importances = rf.feature_importances_        
-feat_names  = X.columns
-feat_imp = pd.Series(importances, index=feat_names) \
-    .sort_values(ascending=False)
-top_k = 10
-top_features = feat_imp.iloc[:top_k].index.tolist()
-print(f"\nTop {top_k} features:\n", top_features)
-X_train_sel = X_train[top_features]
-X_test_sel  = X_test[top_features]
-rf_sel = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=42)
-X_test_sel_scaled = scaler.fit_transform(X_test_sel)
-X_train_sel_scaled = scaler.fit_transform(X_train_sel)
-rf_sel.fit(X_train_sel_scaled, y_train)
-
-
-xgb = XGBClassifier(
-    use_label_encoder=False,
-    eval_metric="logloss",
-    random_state=42
-)
-xgb.fit(X_train, y_train)
-
-y_pred_rf = rf.predict(X_test_scaled)
-y_pred_rf_sel = rf_sel.predict(X_test_sel_scaled)
-y_pred_xgb = xgb.predict(X_test)
-
-def evaluate(name, y_true, y_pred):
-    print(f"\n=== {name} ===")
-    print("Accuracy :", accuracy_score(y_true, y_pred))
-    print("Precision:", precision_score(y_true, y_pred))
-    print("Recall   :", recall_score(y_true, y_pred))
-    print("F1-score :", f1_score(y_true, y_pred))
-    print("MCC      :", matthews_corrcoef(y_true, y_pred))
-    print("Conf Mat :\n", confusion_matrix(y_true, y_pred))
-
-evaluate("Random Forest",  y_test, y_pred_rf)
-evaluate("XGBoost",        y_test, y_pred_xgb)
-evaluate("Random Forest with sel",  y_test, y_pred_rf_sel)
+fig, ax = plt.subplots(figsize=(10, 6))
+sns.kdeplot(df["Monthly Charges"][df["Churn Label"] == 'No'],fill=True,alpha=0.5,label="No churn",ax=ax)
+sns.kdeplot(df["Monthly Charges"][df["Churn Label"] == 'Yes'],fill=True,alpha=0.5,label="Churned",ax=ax)
+ax.set_title("Monthly Charges Distribution by Churn")
+ax.set_xlabel("Monthly Charges")
+ax.legend()
+plt.tight_layout()
+plt.show()
