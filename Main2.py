@@ -98,7 +98,7 @@ def feature_importances(X_train_scaled, X_test_scaled, y_train, X_cols):
     X_train_sel = sfm.transform(X_train_scaled)
     X_test_sel = sfm.transform(X_test_scaled)
 
-    return X_train_sel , X_test_sel;
+    return X_train_sel , X_test_sel
 
 X_train_sel, X_test_sel = feature_importances(X_train_scaled, X_test_scaled, y_train, X.columns)
 
@@ -210,7 +210,6 @@ plt.title('Churn Distribution by Gender', y=1.05)
 plt.tight_layout()
 plt.show()
 
-
 # Customer contract distribution
 plt.figure(figsize=(10, 6))
 sns.countplot(data=df,x="Churn Label",hue="Contract",palette="Set2")
@@ -239,5 +238,33 @@ sns.kdeplot(df["Monthly Charges"][df["Churn Label"] == 'Yes'],fill=True,alpha=0.
 ax.set_title("Monthly Charges Distribution by Churn")
 ax.set_xlabel("Monthly Charges")
 ax.legend()
+plt.tight_layout()
+plt.show()
+
+# Visualized comparison for models and feature selection techniques
+results = {}
+for name, model, X_te in [
+    ("RF + FI",    rf_fi,  X_test_fi),
+    ("XGB + FI",   xgb_fi, X_test_fi),
+    ("RF + RFE",   rf_rfe, X_test_rfe),
+    ("XGB + RFE",  xgb_rfe,X_test_rfe),
+]:
+    y_pred = model.predict(X_te)
+    results[name] = {
+        "Accuracy":  accuracy_score(y_test, y_pred),
+        "Precision": precision_score(y_test, y_pred),
+        "Recall":    recall_score(y_test, y_pred),
+        "F1":        f1_score(y_test, y_pred),
+        "MCC":       matthews_corrcoef(y_test, y_pred)
+    }
+df_res = pd.DataFrame(results).T
+df_res = df_res[["Accuracy","Precision","Recall","F1","MCC"]] 
+plt.figure(figsize=(10, 6))
+df_res.plot(kind="bar", rot=0, edgecolor="black", width=0.8)
+plt.title("Model Comparison on Churn Prediction", fontsize=16)
+plt.ylabel("Score")
+plt.ylim(0,1)
+plt.legend(loc="lower right", ncol=2, frameon=True)
+plt.grid(axis="y", linestyle="--", alpha=0.7)
 plt.tight_layout()
 plt.show()
