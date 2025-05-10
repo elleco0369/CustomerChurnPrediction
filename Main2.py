@@ -236,8 +236,7 @@ def get_metrics(y_true, y_pred):
 # Feature Correlation Matrix
 plt.figure(figsize=(15, 9))
 corr = df.apply(lambda x: pd.factorize(x)[0]).corr()
-mask = np.triu(np.ones_like(corr, dtype=bool))
-sns.heatmap(corr,mask=mask,annot=True,fmt=".2f",annot_kws={"size": 9,},linewidths=0.5,cmap="coolwarm",vmin=-1, vmax=1,cbar_kws={"shrink": .5})
+sns.heatmap(corr,annot=True,fmt=".2f",annot_kws={"size": 9},linewidths=0.5,cmap="coolwarm",vmin=-1,vmax=1,cbar_kws={"shrink": .5})
 plt.xticks(rotation=45, ha="right")
 plt.yticks(rotation=0)
 plt.title("Feature Correlation Matrix", pad=16, fontsize=14)
