@@ -22,3 +22,7 @@ You can install them using pip:
 
 ```bash
 pip install pandas numpy scikit-learn matplotlib seaborn
+
+
+Collaborators:
+Orcun_ysr, ChestnutRisenKamehameha
